@@ -68,7 +68,7 @@ namespace LtInfo.Common
 
         public void LogDetailedErrorMessage(string additionalMessage, Exception exception, HttpContext context)
         {
-            LogDetailedErrorMessage(string.Format("{0}:{1}{2}", additionalMessage, Environment.NewLine, exception), context);
+            LogDetailedErrorMessage($"{additionalMessage}:{Environment.NewLine}{exception}", context);
         }
 
         public void LogDetailedErrorMessage(string additionalMessage)
@@ -135,7 +135,7 @@ namespace LtInfo.Common
             {
                 username = context.User.Identity.Name;
             }
-            return String.Format("Username: {0}", username);
+            return $"Username: {username}";
         }
     }
 }

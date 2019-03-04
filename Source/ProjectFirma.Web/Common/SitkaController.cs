@@ -207,7 +207,7 @@ namespace ProjectFirma.Web.Common
             {
                 // Get out the most important part - the LoaderExceptions which will help speed fixing the problem
                 var loaderExceptions = String.Join("\r\n   ", ex.LoaderExceptions.Select(x => x.ToString()));
-                var message = string.Format("{0}\r\nLoaderExceptions:\r\n{1}", ex.Message, loaderExceptions);
+                var message = $"{ex.Message}\r\nLoaderExceptions:\r\n{loaderExceptions}";
                 throw new ReflectionTypeLoadException(ex.Types, ex.LoaderExceptions, message);
             }
 
@@ -236,7 +236,7 @@ namespace ProjectFirma.Web.Common
             var viewNamespace = (viewType.Namespace ?? String.Empty);
             var viewNamespaceSet = viewNamespace.Split('.');
 
-            Check.Require(viewNamespaceSet.Contains(ViewsRootNamespace), string.Format("Could not find views root namespace {0} in the view {1}, is it a proper view?", ViewsRootNamespace, viewName));
+            Check.Require(viewNamespaceSet.Contains(ViewsRootNamespace),$"Could not find views root namespace {ViewsRootNamespace} in the view {viewName}, is it a proper view?");
 
             var isViewShared = viewNamespaceSet.Contains("Shared");
 
@@ -245,7 +245,7 @@ namespace ProjectFirma.Web.Common
             var thisControllerName = ControllerTypeToControllerName(thisControllerType);
             var controllerAndPageInSameDirectory = (viewNameLastNamespace == thisControllerName);
 
-            Check.Require(isViewShared || controllerAndPageInSameDirectory, String.Format("You can't cross boundaries on controllers ({0} -> {1}). You must return a View that is within your controller's view directory or a shared one, otherwise view resolution will fail.", thisControllerTypeName, viewName));
+            Check.Require(isViewShared || controllerAndPageInSameDirectory, $"You can't cross boundaries on controllers ({thisControllerTypeName} -> {viewName}). You must return a View that is within your controller's view directory or a shared one, otherwise view resolution will fail.");
         }
 
         /// <summary>
@@ -292,13 +292,13 @@ namespace ProjectFirma.Web.Common
         }
 
         /// <summary>
-        /// Convert a controller name into the segement of the URL following MVC conventions adding .mvc as needed: Foo => string: Foo.mvc or Foo
+        /// Convert a controller name into the segment of the URL following MVC conventions adding .mvc as needed: Foo => string: Foo.mvc or Foo
         /// </summary>
         /// <param name="controllerName">Controller name (name minus the "Controller" suffix)</param>
         public static string ControllerNameToUrlSegment(string controllerName)
         {
             var mvcFileExtensionIfAny = (SitkaWebConfiguration.UseMvcExtensionInUrl) ? ".mvc" : "";
-            return string.Format("{0}{1}", controllerName, mvcFileExtensionIfAny);
+            return $"{controllerName}{mvcFileExtensionIfAny}";
         }
 
         public static List<MethodInfo> FindAttributedMethods(Type webServiceType, Type attributeType)

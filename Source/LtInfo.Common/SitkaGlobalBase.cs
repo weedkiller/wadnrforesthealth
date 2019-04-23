@@ -186,15 +186,15 @@ namespace LtInfo.Common
                 ViewEngines.Engines.Add(appSpecificEngine);
             }
 
-            var extraPartialViewLoactions = new List<string> { "~/Views/{1}/{0}.cshtml", "~/Views/Shared/{0}.cshtml", "~/Views/SitkaCommon/{0}.cshtml" };
+            var extraPartialViewLocations = new List<string> { "~/Views/{1}/{0}.cshtml", "~/Views/Shared/{0}.cshtml", "~/Views/SitkaCommon/{0}.cshtml" };
             if (areasDictionary.Any())
             {
-                extraPartialViewLoactions.AddRange(areasDictionary.Keys.SelectMany(x => new List<string> {string.Format("~/Areas/{0}/Views/{{1}}/{{0}}.cshtml", x), string.Format("~/Areas/{0}/Views/Shared/{{0}}.cshtml", x)}));
+                extraPartialViewLocations.AddRange(areasDictionary.Keys.SelectMany(x => new List<string> {string.Format("~/Areas/{0}/Views/{{1}}/{{0}}.cshtml", x), string.Format("~/Areas/{0}/Views/Shared/{{0}}.cshtml", x)}));
             }
 
             var globalLocations = new RazorViewEngine
             {// In addition to the usual Root and "Shared" location, we add a "SitkaCommon" directory. This is where we put views coming from Sitka Common.
-                PartialViewLocationFormats = extraPartialViewLoactions.ToArray()
+                PartialViewLocationFormats = extraPartialViewLocations.ToArray()
             };
 
             ViewEngines.Engines.Add(globalLocations);
@@ -249,7 +249,7 @@ namespace LtInfo.Common
             {
                 // Catch and log anything that goes wrong in this error handler, we don't let it escape so that it doesn't start the error handling over again
                 SitkaLogger.Instance.LogDetailedErrorMessage(new Exception("Secondary exception occurred while trying to display error message.", ex));
-                errorPageHtml = WrapExceptionDetailsInHtml(String.Format("Secondary exception occurred while trying to display error message, original error message lost.\r\nSecondary Exception Details:\r\n{0}", ex));
+                errorPageHtml = WrapExceptionDetailsInHtml($"Secondary exception occurred while trying to display error message, original error message lost.\r\nSecondary Exception Details:\r\n{ex}");
             }
 
             SendErrorResponseToBrowser(errorPageHtml, httpStatusCode);
@@ -291,7 +291,7 @@ namespace LtInfo.Common
                     }
                     else if (isLocal)
                     {
-                        errorMessage = string.Format("{0}\r\n{1}", errorMessage, WrapExceptionDetailsInHtml(getLastError.ToString()));
+                        errorMessage = $"{errorMessage}\r\n{WrapExceptionDetailsInHtml(getLastError.ToString())}";
                     }
                 }
 
@@ -309,7 +309,7 @@ namespace LtInfo.Common
             {
                 // Catch and log anything that goes wrong in this error handler, we don't let it escape so that it doesn't start the error handling over again
                 SitkaLogger.Instance.LogDetailedErrorMessage(ex);
-                return WrapExceptionDetailsInHtml(String.Format("Secondary exception occurred while trying to display error message, original error message lost.\r\nSecondary Exception Details:\r\n{0}", ex));
+                return WrapExceptionDetailsInHtml($"Secondary exception occurred while trying to display error message, original error message lost.\r\nSecondary Exception Details:\r\n{ex}");
             }
         }
 
@@ -335,7 +335,7 @@ namespace LtInfo.Common
         /// </summary>
         private static string WrapExceptionDetailsInHtml(string text)
         {
-            return String.Format("<pre class=\"stackTrace\" style=\"white-space:pre-wrap;background-color:lightYellow;color:darkRed;padding:10px\">\r\n{0}\r\n</pre>", text.HtmlEncode());
+            return $"<pre class=\"stackTrace\" style=\"white-space:pre-wrap;background-color:lightYellow;color:darkRed;padding:10px\">\r\n{text.HtmlEncode()}\r\n</pre>";
         }
 
         private static SitkaDisplayErrorException GetSitkaDisplayableExceptionIfAny(Exception lastError)
@@ -396,10 +396,10 @@ namespace LtInfo.Common
                     {
                         lastError = SitkaHttpRequestStorage.WcfStoredError;
                     }
-                    SitkaLogger.Instance.LogDetailedErrorMessage(string.Format("Http Server is returning response status code \"{0}\" and error was not logged via the Application_Error method", Response.Status), lastError, Context);
+                    SitkaLogger.Instance.LogDetailedErrorMessage( $"Http Server is returning response status code \"{Response.Status}\" and error was not logged via the Application_Error method", lastError, Context);
                     if (lastError != null && lastError.InnerException != null)
                     {
-                        SitkaLogger.Instance.LogDetailedErrorMessage(string.Format("Http Server is returning response status code \"{0}\" - Inner exception", Response.Status), lastError.InnerException, Context);
+                        SitkaLogger.Instance.LogDetailedErrorMessage($"Http Server is returning response status code \"{Response.Status}\" - Inner exception", lastError.InnerException, Context);
                     }
                 }
             }
@@ -411,7 +411,7 @@ namespace LtInfo.Common
                 var html = Instance.NotFoundHtml;
                 if (SitkaHttpRequestStorage.NotFoundStoredError != null)
                 {
-                    html += string.Format("<p>{0}</p>", SitkaHttpRequestStorage.NotFoundStoredError.Message);
+                    html += $"<p>{SitkaHttpRequestStorage.NotFoundStoredError.Message}</p>";
                     SitkaHttpRequestStorage.NotFoundStoredError = null;
                 }
                 var errorHtml = GetMissingPageHtml(Request.Cookies.ToCookieCollection(Request.Url.Host), html);

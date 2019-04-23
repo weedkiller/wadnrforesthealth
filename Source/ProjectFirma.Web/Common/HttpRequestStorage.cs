@@ -18,6 +18,8 @@ GNU Affero General Public License <http://www.gnu.org/licenses/> for more detail
 Source code is available upon request via <support@sitkatech.com>.
 </license>
 -----------------------------------------------------------------------*/
+
+using System;
 using System.Collections.Generic;
 using LtInfo.Common;
 using LtInfo.Common.DesignByContract;
@@ -35,15 +37,41 @@ namespace ProjectFirma.Web.Common
 
         protected override List<string> BackingStoreKeys => new List<string>();
 
+        private enum PersonExceptionBehavior
+        {
+            PersonNullWhenNotFound,
+            PersonThrowsWhenNotFound
+        }
+
+
         public static Person Person
         {
-            get
+            get => GetPersonWithOptionalException(PersonExceptionBehavior.PersonThrowsWhenNotFound);
+            set => SetValue(PersonKey, value);
+        }
+
+        public static Person PersonWithWrappedException
+        {
+            get => GetPersonWithOptionalException(PersonExceptionBehavior.PersonNullWhenNotFound);
+            set => SetValue(PersonKey, value);
+        }
+
+
+        private static Person GetPersonWithOptionalException(PersonExceptionBehavior personExceptionBehavior)
+        {
+            var person = GetValueOrDefault<Person>(PersonKey, () => null);
+            if (personExceptionBehavior == PersonExceptionBehavior.PersonThrowsWhenNotFound)
             {
-                var person = GetValueOrDefault<Person>(PersonKey, () => null);
                 Check.RequireNotNull(person, $"Attempting to access {nameof(Person)} before OnAuthentication is complete. Unexpected, some code may be trying to access Person too soon in request event lifecycle.");
                 return person;
             }
-            set => SetValue(PersonKey, value);
+
+            if (personExceptionBehavior == PersonExceptionBehavior.PersonNullWhenNotFound)
+            {
+                return person;
+            }
+
+            throw new Exception($"Unhandled PersonExceptionBehavior: {personExceptionBehavior}");
         }
 
         public static DatabaseEntities DatabaseEntities => (DatabaseEntities) LtInfoEntityTypeLoader;

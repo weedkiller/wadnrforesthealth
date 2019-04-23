@@ -28,14 +28,15 @@ namespace ProjectFirma.Web.Common
     {
         public override string GetUserAndSessionInformationForError(HttpContext context)
         {
-            var person = HttpRequestStorage.Person;
-            if (person.IsAnonymousUser)
+            // Often in an Exception we lack the Person anyhow, which means this is going
+            // to just die again, causing double exception misery. So we tolerate null Person here.
+            var person = HttpRequestStorage.PersonWithWrappedException;
+            if (person == null || person.IsAnonymousUser)
             {
                 return "User: Anonymous";
             }
             string organizationName = person.Organization.OrganizationName;
-            return
-                $"User: {person.FullNameFirstLast}{Environment.NewLine}LogonName: {person.Email}{Environment.NewLine}PersonID: {person.PersonID}{Environment.NewLine}Organization: {organizationName}{Environment.NewLine}";
+            return $"User: {person.FullNameFirstLast}{Environment.NewLine}LogonName: {person.Email}{Environment.NewLine}PersonID: {person.PersonID}{Environment.NewLine}Organization: {organizationName}{Environment.NewLine}";
         }
     }
 }

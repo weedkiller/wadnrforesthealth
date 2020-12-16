@@ -274,7 +274,9 @@ namespace ProjectFirma.Web.Controllers
                 return ViewDeleteOrganization(organization, viewModel);
             }
             var message = $"{FieldDefinition.Organization.GetFieldDefinitionLabel()} \"{organization.OrganizationName}\" successfully deleted.";
-            organization.DeleteFull(HttpRequestStorage.DatabaseEntities);
+            
+            organization.DeleteFullManual(HttpRequestStorage.DatabaseEntities);
+            //organization.DeleteFull(HttpRequestStorage.DatabaseEntities);
             SetMessageForDisplay(message);
 
             return new ModalDialogFormJsonResult();

@@ -37,8 +37,13 @@ namespace ProjectFirma.Web.Models
         public const string OrganizationUnknown = "(Unknown or Unspecified Organization)";
         public const string OrganizationWADNR = "Washington State Department of Natural Resources";
 
-        public string DisplayName => IsUnknown ? "Unknown or unspecified" : $"{OrganizationName}{(!String.IsNullOrWhiteSpace(OrganizationShortName) ? $" ({OrganizationShortName})" : String.Empty)}{(!IsActive ? " (Inactive)" : String.Empty)}";
-        public string DisplayNameWithoutAbbreviation => IsUnknown ? "Unknown or unspecified" : $"{OrganizationName}{(!IsActive ? " (Inactive)" : String.Empty)}";
+        public string DisplayName => IsUnknown
+            ? "Unknown or unspecified"
+            : $"{OrganizationName}{(!String.IsNullOrWhiteSpace(OrganizationShortName) ? $" ({OrganizationShortName})" : String.Empty)}{(!IsActive ? " (Inactive)" : String.Empty)}";
+
+        public string DisplayNameWithoutAbbreviation => IsUnknown
+            ? "Unknown or unspecified"
+            : $"{OrganizationName}{(!IsActive ? " (Inactive)" : String.Empty)}";
 
         public string OrganizationNamePossessive
         {
@@ -48,6 +53,7 @@ namespace ProjectFirma.Web.Models
                 {
                     return OrganizationName;
                 }
+
                 var postFix = OrganizationName.EndsWith("s") ? "'" : "'s";
                 return $"{OrganizationName}{postFix}";
             }
@@ -61,40 +67,57 @@ namespace ProjectFirma.Web.Models
                 {
                     return "Unknown or Unassigned";
                 }
+
                 return OrganizationShortName ?? OrganizationName;
             }
         }
 
-        public HtmlString PrimaryContactPersonAsUrl => PrimaryContactPerson != null ? PrimaryContactPerson.GetFullNameFirstLastAsUrl() : new HtmlString(ViewUtilities.NoneString);
+        public HtmlString PrimaryContactPersonAsUrl => PrimaryContactPerson != null
+            ? PrimaryContactPerson.GetFullNameFirstLastAsUrl()
+            : new HtmlString(ViewUtilities.NoneString);
 
-        public HtmlString PrimaryContactPersonWithOrgAsUrl => PrimaryContactPerson != null ? PrimaryContactPerson.GetFullNameFirstLastAndOrgAsUrl() : new HtmlString(ViewUtilities.NoneString);
+        public HtmlString PrimaryContactPersonWithOrgAsUrl => PrimaryContactPerson != null
+            ? PrimaryContactPerson.GetFullNameFirstLastAndOrgAsUrl()
+            : new HtmlString(ViewUtilities.NoneString);
 
         /// <summary>
         /// Use for security situations where the user summary is not displayable, but the Organization is.
         /// </summary>
-        public HtmlString PrimaryContactPersonAsStringAndOrgAsUrl => PrimaryContactPerson != null ? PrimaryContactPerson.GetFullNameFirstLastAsStringAndOrgAsUrl() : new HtmlString(ViewUtilities.NoneString);
+        public HtmlString PrimaryContactPersonAsStringAndOrgAsUrl => PrimaryContactPerson != null
+            ? PrimaryContactPerson.GetFullNameFirstLastAsStringAndOrgAsUrl()
+            : new HtmlString(ViewUtilities.NoneString);
 
-        public string PrimaryContactPersonWithOrgAsString => PrimaryContactPerson != null ? PrimaryContactPerson.FullNameFirstLastAndOrg : ViewUtilities.NoneString;
+        public string PrimaryContactPersonWithOrgAsString => PrimaryContactPerson != null
+            ? PrimaryContactPerson.FullNameFirstLastAndOrg
+            : ViewUtilities.NoneString;
 
-        public string PrimaryContactPersonAsString => PrimaryContactPerson != null ? PrimaryContactPerson.FullNameFirstLast : ViewUtilities.NoneString;
+        public string PrimaryContactPersonAsString => PrimaryContactPerson != null
+            ? PrimaryContactPerson.FullNameFirstLast
+            : ViewUtilities.NoneString;
 
-        public static bool IsOrganizationNameUnique(IEnumerable<Organization> organizations, string organizationName, int currentOrganizationID)
+        public static bool IsOrganizationNameUnique(IEnumerable<Organization> organizations, string organizationName,
+            int currentOrganizationID)
         {
             var organization =
-                organizations.SingleOrDefault(x => x.OrganizationID != currentOrganizationID && String.Equals(x.OrganizationName, organizationName, StringComparison.InvariantCultureIgnoreCase));
+                organizations.SingleOrDefault(x =>
+                    x.OrganizationID != currentOrganizationID && String.Equals(x.OrganizationName, organizationName,
+                        StringComparison.InvariantCultureIgnoreCase));
             return organization == null;
         }
 
-        public static bool IsOrganizationShortNameUniqueIfProvided(IEnumerable<Organization> organizations, string organizationShortName, int currentOrganizationID)
+        public static bool IsOrganizationShortNameUniqueIfProvided(IEnumerable<Organization> organizations,
+            string organizationShortName, int currentOrganizationID)
         {
             // Nulls don't trip the unique check
             if (organizationShortName == null)
             {
                 return true;
             }
+
             var existingOrganization =
                 organizations.SingleOrDefault(
-                    x => x.OrganizationID != currentOrganizationID && String.Equals(x.OrganizationShortName, organizationShortName, StringComparison.InvariantCultureIgnoreCase));
+                    x => x.OrganizationID != currentOrganizationID && String.Equals(x.OrganizationShortName,
+                        organizationShortName, StringComparison.InvariantCultureIgnoreCase));
             return existingOrganization == null;
         }
 
@@ -102,15 +125,19 @@ namespace ProjectFirma.Web.Models
 
         public bool IsInKeystone => OrganizationGuid.HasValue;
 
-        public bool IsUnknown => !String.IsNullOrWhiteSpace(OrganizationName) && OrganizationName.Equals(OrganizationUnknown, StringComparison.InvariantCultureIgnoreCase);
-      
+        public bool IsUnknown => !String.IsNullOrWhiteSpace(OrganizationName) &&
+                                 OrganizationName.Equals(OrganizationUnknown,
+                                     StringComparison.InvariantCultureIgnoreCase);
+
         public FeatureCollection OrganizationBoundaryToFeatureCollection()
         {
             var feature = DbGeometryToGeoJsonHelper.FromDbGeometry(OrganizationBoundary);
             feature.Properties.Add(OrganizationType.OrganizationTypeName, OrganizationName);
-            return new FeatureCollection(new List<Feature> { feature });
+            return new FeatureCollection(new List<Feature> {feature});
         }
-        public PerformanceMeasureChartViewData GetPerformanceMeasureChartViewData(PerformanceMeasure performanceMeasure, Person currentPerson)
+
+        public PerformanceMeasureChartViewData GetPerformanceMeasureChartViewData(PerformanceMeasure performanceMeasure,
+            Person currentPerson)
         {
             var projects = this.GetAllActiveProjectsAndProposals(currentPerson).ToList();
             return new PerformanceMeasureChartViewData(performanceMeasure, currentPerson, false, projects);
@@ -118,7 +145,9 @@ namespace ProjectFirma.Web.Models
 
         public bool CanBeAnApprovingOrganization()
         {
-            return OrganizationType.OrganizationTypeRelationshipTypes.Any(x => x.RelationshipTypeID == MultiTenantHelpers.GetCanStewardProjectsOrganizationRelationship()?.RelationshipTypeID);
+            return OrganizationType.OrganizationTypeRelationshipTypes.Any(x =>
+                x.RelationshipTypeID == MultiTenantHelpers.GetCanStewardProjectsOrganizationRelationship()
+                    ?.RelationshipTypeID);
         }
 
         public bool CanBeReportedInAccomplishmentsDashboard()
@@ -130,12 +159,16 @@ namespace ProjectFirma.Web.Models
 
         public bool CanBeAPrimaryContactOrganization()
         {
-            return OrganizationType.OrganizationTypeRelationshipTypes.Any(x => x.RelationshipTypeID == MultiTenantHelpers.GetIsPrimaryContactOrganizationRelationship()?.RelationshipTypeID);
+            return OrganizationType.OrganizationTypeRelationshipTypes.Any(x =>
+                x.RelationshipTypeID ==
+                MultiTenantHelpers.GetIsPrimaryContactOrganizationRelationship()?.RelationshipTypeID);
         }
 
         public bool CanStewardProjects()
         {
-            return OrganizationType.OrganizationTypeRelationshipTypes.Any(x => x.RelationshipTypeID == MultiTenantHelpers.GetCanStewardProjectsOrganizationRelationship()?.RelationshipTypeID);
+            return OrganizationType.OrganizationTypeRelationshipTypes.Any(x =>
+                x.RelationshipTypeID == MultiTenantHelpers.GetCanStewardProjectsOrganizationRelationship()
+                    ?.RelationshipTypeID);
         }
 
         public bool IsMyProject(Project project)
@@ -162,6 +195,101 @@ namespace ProjectFirma.Web.Models
             var canStewardProjectsOrganization = project.GetCanStewardProjectsOrganization();
             return canStewardProjectsOrganization != null &&
                    canStewardProjectsOrganization.OrganizationID == OrganizationID;
+        }
+
+        /// <summary>
+        /// Manually implemented version of DeleteFull, which should avoid Stack Overflow
+        /// which occurs with the generator version
+        /// </summary>
+        /// <param name="dbContext"></param>
+        public void DeleteFullManual(DatabaseEntities dbContext)
+        {
+            DeleteChildrenManual(dbContext);
+            Delete(dbContext);
+        }
+
+        /// <summary>
+        /// Manually implemented version of DeleteFull, which should avoid Stack Overflow
+        /// which occurs with the generator version
+        /// </summary>
+        public void DeleteChildrenManual(DatabaseEntities dbContext)
+        {
+            foreach (var ag in Agreements.ToList())
+            {
+                //foreach (var ap in x.AgreementPeople)
+                //{
+                //    ap.Delete(dbContext);
+                //}
+                //x.Delete(dbContext);
+                ag.DeleteFull(dbContext);
+            }
+
+            dbContext.SaveChanges();
+
+            foreach (var x in GisUploadSourceOrganizationsWhereYouAreTheDefaultLeadImplementerOrganization.ToList())
+            {
+                x.DeleteFull(dbContext);
+            }
+
+            dbContext.SaveChanges();
+
+            foreach (var x in Grants.ToList())
+            {
+                x.DeleteFull(dbContext);
+            }
+
+            dbContext.SaveChanges();
+
+            foreach (var x in GrantAllocations.ToList())
+            {
+                x.DeleteFull(dbContext);
+            }
+
+            dbContext.SaveChanges();
+
+            foreach (var x in OrganizationBoundaryStagings.ToList())
+            {
+                x.DeleteFull(dbContext);
+            }
+
+            dbContext.SaveChanges();
+
+            foreach (var x in PersonStewardOrganizations.ToList())
+            {
+                x.DeleteFull(dbContext);
+            }
+
+            dbContext.SaveChanges();
+
+            foreach (var x in People.ToList())
+            {
+                // PROBLEMATIC
+                x.Delete(dbContext);
+            }
+
+
+            dbContext.SaveChanges();
+
+            foreach (var x in Programs.ToList())
+            {
+                x.DeleteFull(dbContext);
+            }
+
+            dbContext.SaveChanges();
+
+            foreach (var x in ProjectOrganizations.ToList())
+            {
+                x.DeleteFull(dbContext);
+            }
+
+            dbContext.SaveChanges();
+
+            foreach (var x in ProjectOrganizationUpdates.ToList())
+            {
+                x.DeleteFull(dbContext);
+            }
+
+            dbContext.SaveChanges();
         }
     }
 }

@@ -114,7 +114,7 @@ namespace ProjectFirma.Web.Controllers
         // ReSharper disable once InconsistentNaming
         public ActionResult ADFSPost(string returnUrl)
         {
-            var adfsSamlResponse = new ADFSSamlResponse();
+            var adfsSamlResponse = new AdfsSamlResponse();
             try
             {
                 // SAML providers usually POST the data into this var

@@ -685,6 +685,7 @@
     <Compile Include="Models\Treatment.cs" />
     <Compile Include="Models\TreatmentModelExtensions.cs" />
     <Compile Include="Models\vSocrataDataMartRawJsonImportIndex.cs" />
+    <Compile Include="AdfsSamlResponseTest.cs" />
     <Compile Include="SawSamlResponseTest.cs" />
     <Compile Include="ScheduledJobs\FinanceAPILastLoadUtil.cs" />
     <Compile Include="ScheduledJobs\GrantExpenditureImportHangfireBackgroundJob.cs" />
@@ -805,7 +806,7 @@
     <Compile Include="Controllers\FocusAreaController.cs" />
     <Compile Include="Models\FocusArea.cs" />
     <Compile Include="Controllers\GrantController.cs" />
-    <Compile Include="ADFSSamlResponse.cs" />
+    <Compile Include="AdfsSamlResponse.cs" />
     <Compile Include="Common\CertificateHelpers.cs" />
     <Compile Include="Controllers\ProjectPersonController.cs" />
     <Compile Include="Models\IProjectPerson.cs" />

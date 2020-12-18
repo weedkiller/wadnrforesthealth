@@ -4,11 +4,14 @@ using System.IO;
 using System.Xml;
 using System.Security.Cryptography.Xml;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace ProjectFirma.Web
 {
     // ReSharper disable once InconsistentNaming
-    public class ADFSSamlResponse
+    public class AdfsSamlResponse
     {
         private string _originalDecodedResponse;
         private const string BaseAttributeStatementXPath = "/samlp:Response/saml:EncryptedAssertion/saml:Assertion/saml:AttributeStatement";
@@ -19,6 +22,11 @@ namespace ProjectFirma.Web
         {
             var utf8Encoding = new System.Text.UTF8Encoding();
             var xmlStringAdfsSamlResponse = utf8Encoding.GetString(Convert.FromBase64String(base64AdfsSamlResponse));
+            LoadFromString(xmlStringAdfsSamlResponse);
+        }
+
+        public void LoadFromString(string xmlStringAdfsSamlResponse)
+        {
             _originalDecodedResponse = xmlStringAdfsSamlResponse;
             _xmlDoc = new XmlDocument {PreserveWhitespace = true, XmlResolver = null};
             _xmlDoc.LoadXml(xmlStringAdfsSamlResponse);
@@ -42,6 +50,84 @@ namespace ProjectFirma.Web
             var encryptedXml = new EncryptedXml(_xmlDoc);
             encryptedXml.DecryptDocument();
         }
+
+        /// <summary>
+        /// decrypt a document with the specified key
+        /// </summary>
+        /// <param name="docin">encrypted document</param>
+        /// <param name="key">the key pair</param>
+        /// <returns>the decrypted document</returns>
+        public static XmlDocument DecryptDocument(XmlDocument docin, X509Certificate2 key, StringBuilder log = null)
+        {
+            /* first step: make sure encrypted xml contains all these items.
+             * EncryptedKey                (present in many documents)
+             *   EncryptionMethod          (present in many documents)
+             *     KeyInfo                 (absent in some documents)
+             *       X509Data                 ditto
+             *         X509Certificate        ditto with x.509 cert in Base4
+             *  
+             * because that's the way dotnet EncryptedXML figures out
+             * under the covers which key to use to decode the document,
+             * bless its pointed little head.  */
+
+            var encryptedKey = GetFirstNodeByTagName(docin, @"EncryptedKey");
+            if (null == encryptedKey)
+            {
+                /* not an encrypted document, give it right back. */
+                return docin;
+            }
+            /* leave the input document unchanged, manipulate a copy */
+            var doc = (XmlDocument)docin.Clone();
+
+            encryptedKey = GetFirstNodeByTagName(doc, @"EncryptedKey");
+            if (null == encryptedKey)
+            {
+                if (null != log)
+                    log.Append("No encryption key in document").AppendLine();
+                return docin;
+            }
+
+            var encryptionMethod = GetFirstNodeByTagName(doc, @"EncryptionMethod");
+            if (null == encryptionMethod)
+            {
+                if (null != log)
+                    log.Append("No key encryption method in document").AppendLine();
+                return docin;
+            }
+
+            /*create required stanza of XML based on our public key */
+            const string keynamespace = SignedXml.XmlDsigNamespaceUrl;
+            XmlNode ki = doc.CreateElement(null, @"KeyInfo", keynamespace);
+            XmlNode xd = doc.CreateElement(null, @"X509Data", keynamespace);
+            XmlNode xc = doc.CreateElement(null, @"X509Certificate", keynamespace);
+            xc.InnerText = Convert.ToBase64String(key.Export(X509ContentType.Cert));
+
+            /* insert it into the received document */
+            xd.AppendChild(xc);
+            ki.AppendChild(xd);
+            encryptedKey.InsertAfter(ki, encryptionMethod);
+            if (null != log) log.Append("Adding KeyInfo data to encrypted document").AppendLine();
+
+            /* handle the decrypt */
+            try
+            {
+                var exml = new EncryptedXml(doc);
+                exml.DecryptDocument();
+            }
+            catch (CryptographicException cre)
+            {
+                if (null != log) log.Append(cre.Message).AppendLine();
+            }
+            return doc;
+        }
+
+        private static XmlNode GetFirstNodeByTagName(XmlDocument docin, string localName)
+        {
+            var nodeList = docin.GetElementsByTagName(localName);
+            var item = nodeList.Count > 0 ? nodeList[0] : null;
+            return item;
+        }
+
 
         public string GetFirstName()
         {
